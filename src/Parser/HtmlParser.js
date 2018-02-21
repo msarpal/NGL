@@ -1,52 +1,40 @@
-var http = require('http');
-var htmlparser = require('htmlparser2');
+var request = require("request");
+var cheerio = require("cheerio");
+var fs = require("fs");
 
 var express = require('express');
 var router = express.Router();
 
-router.get('/', htmlParse);
+router.get('/form', htmlParse);
 module.exports = router;
 
-function htmlParse(req,res){
-    console.log("started!");
+var data = [];
+var url = "";
 
-    var url = 'http://www.dotnetcurry.com/nodejs/1270/read-html-file-and-send-html-response-nodejs'
-    
-    http.get(url, function(err,response) {
-        console.log("http");
-        if(err){console.log(" Problem in reading html content !");}
-        else{
-      parseResponse(response);}
-    })
-    
-    var parseResponse = function(response) {
-        console.log('in parse Response');
-      var data = "";
-      response.on('data', function(chunk) {
-        data += chunk;
-      });
-      var tags = [];
-      var tagsCount = {};
-      var tagsWithCount = [];
-      response.on('end', function(chunk) {
-        var parsedData = new htmlparser.Parser({
-         onopentag: function(name, attribs) {
-          if(tags.indexOf(name) === -1) {
-           tags.push(name);
-     tagsCount[name] = 1;
-           } else {
-     tagsCount[name]++;
-           }
-         },
-         onend: function() {
-          for(var i = 1;i < tags.length;i++) {
-           tagsWithCount.push({name:tags[i], count:tagsCount[tags[i]]});
-         }
-        }
-       }, {decodeEntities: true});
-       parsedData.write(data);
-       parsedData.end();
-       console.log(tagsWithCount);
-      });
+function htmlParse(req, res) {
+    //http://localhost:4000/api/parse/form?url=https://www.indeed.com/jobs?l=Los+Angeles&_ga=2.200827310.1261035140.1519200447-880084272.1519200447
+    if (req.query.url != undefined) {
+        url = req.query.url;
+        console.log("started!\n ");
+        request(url, function (error, response, html) {
+            if (!error && response.statusCode == 200) {
+                var $ = cheerio.load(html);
+
+                $('input').filter(function () {
+                    var output = $(this).prev();
+                     console.log(output.text());
+
+                    
+                    if (output.text() != "") {
+                        data.push(output.text().replace(/[^a-zA-Z ]/g, "").replace(/^\s+|\s+$/g, ''));
+                    }
+                    // console.log(output.text());
+
+                });
+                console.log(data);
+            }
+        });
+
     }
+
 }
