@@ -1,5 +1,7 @@
 var request = require("request");
+var http = require("https")
 var cheerio = require("cheerio");
+var generator = require('ngram-natural-language-generator').generator;
 var fs = require("fs");
 var JSSoup = require('jssoup').default;
 
@@ -7,11 +9,16 @@ var express = require('express');
 var router = express.Router();
 
 router.get('/form', htmlParse);
+router.get('/form/nlg', nlg);
+
 module.exports = router;
 
-var data = [];
+
+var inputTags = "";
 var url = "";
-var soup = "";
+var soupObject = "";
+var label = "";
+//var listform = ["text", "email", "radio", "checkbox", "password", "file", "image",/*"hidden"*/];
 
 function htmlParse(req, res) {
     //http://localhost:4000/api/parse/form?url=https://unsplash.com/login
@@ -20,35 +27,50 @@ function htmlParse(req, res) {
         console.log("started!\n ");
         request(url, function (error, response, html) {
             if (!error && response.statusCode == 200) {
-                // var $ = cheerio.load(html);
 
-                // $('form').find('label').each(function (i,e) {
-                //     var output = $(this);
-                //     // console.log(output.text());
+                var $ = cheerio.load(html);
 
-                    
-                //      if (output.text() != "") {
-                         
-                //          data.push(output.text().replace(/[^a-zA-Z ]/g, "").replace(/^\s+|\s+$/g, ''));
-                //      }
-                   
+                $('input').each(function () {
+                    inputTags = $(this);
 
-                // });
-                // console.log(data);
+                    label = $('label[for="' + inputTags.attr('id') + '"]');
 
-                soup = new JSSoup(html); 
-               
-                var listform = ["text","radio", "checkbox", "password", "file", "image",/*"hidden"*/];
-                var result = soup.findAll('input', {'type': listform});
-                console.log('res '+result);
-                for(var index = 0 ; index < result.length ; index++){
-                    console.log(result[index].attrs.id+"");
-                }
-                
+                    if (label.length > 0) {
+                       
+                        console.log(label.text());
+                    }
+                    else {
+                        if (inputTags.attr('id') != undefined) {
+
+                            if (inputTags.attr('placeholder') != undefined) {
+
+                                console.log(inputTags.attr('placeholder'))
+                            }
+                        }
+                    }
+
+                });
+
             }
-          
+            else {
+                console.log("+++    There is a problem while accesing contents of HTML form +++ \n");
+                console.log(error);
+            }
+
         });
 
     }
+}
+
+function nlg(req, res) {
+    generator({
+        text: 'Colorless green ideas sleep furiously.',
+        model: {
+            maxLength: 100,
+            minLength: 50
+        }
+    }, function (err, sentence) {
+        console.log(sentence);
+    });
 
 }
