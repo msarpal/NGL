@@ -14,7 +14,7 @@ router.get('/form/nlg', nlg);
 module.exports = router;
 
 
-var inputTags = "";
+var inputTags, selectTags = "";
 var url = "";
 var soupObject = "";
 var label = "";
@@ -27,19 +27,20 @@ function htmlParse(req, res) {
         console.log("started!\n ");
         request(url, function (error, response, html) {
             if (!error && response.statusCode == 200) {
-
+                //console.log("html "+html);
                 var $ = cheerio.load(html);
-
+              
                 $('input').each(function () {
                     inputTags = $(this);
 
                     label = $('label[for="' + inputTags.attr('id') + '"]');
 
                     if (label.length > 0) {
-                       
+
                         console.log(label.text());
                     }
                     else {
+
                         if (inputTags.attr('id') != undefined) {
 
                             if (inputTags.attr('placeholder') != undefined) {
@@ -51,7 +52,24 @@ function htmlParse(req, res) {
 
                 });
 
+                $('select').each(function () {
+                    selectTags = $(this);
+
+                    label = $('label[for="' + selectTags.attr('id') + '"]');
+
+
+                    if (label.length > 0) {
+
+                        console.log(label.text());
+                    }
+                    else {
+                        console.log(selectTags.children().text() +"\n\n")
+                    }
+
+                });
+
             }
+
             else {
                 console.log("+++    There is a problem while accesing contents of HTML form +++ \n");
                 console.log(error);
